@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>X Cleaner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="ios-navbar">
+    <div class="nav-left">
+      <img src="icons/header-logo.png" alt="Logo" class="nav-logo" />
+    </div>
+    <div class="nav-title">X Cleaner</div>
+    <div class="nav-right">
+      <button class="icon-btn" id="guideBtn" aria-label="Help">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Segmented Control -->
+  <div class="segmented-control-container">
+    <div class="segmented-control">
+      <div class="segment active" data-mode="delete">Delete</div>
+      <div class="segment" data-mode="unlike">Unlike</div>
+    </div>
+  </div>
+
+  <!-- Main Content Scroll -->
+  <main class="ios-content">
+
+    <!-- Stats Group -->
+    <div class="ios-group">
+      <div class="ios-row">
+        <div class="ios-label">Processed</div>
+        <div class="ios-value" id="total">0</div>
+      </div>
+      <div class="ios-divider"></div>
+      <div class="ios-row">
+        <div class="ios-label">Batch Progress</div>
+        <div class="ios-value" id="batch">0/5</div>
+      </div>
+    </div>
+
+    <div class="ios-header-text">SETTINGS</div>
+
+    <!-- Settings Group -->
+    <div class="ios-group">
+
+      <!-- Undo Toggle -->
+      <div class="ios-row" id="undoToggleRow">
+        <div class="ios-label">Undo Reposts</div>
+        <div class="ios-action">
+          <label class="ios-switch">
+            <input type="checkbox" id="toggleUndo">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="ios-divider" id="undoDivider"></div>
+
+      <!-- Batch Size -->
+      <div class="ios-row">
+        <div class="ios-label">Batch Size</div>
+        <div class="ios-action">
+          <input type="number" id="batchSize" class="ios-input" value="5" min="1" max="50">
+        </div>
+      </div>
+
+      <div class="ios-divider"></div>
+
+      <!-- Cooldown -->
+      <div class="ios-row">
+        <div class="ios-label">Cooldown (ms)</div>
+        <div class="ios-action">
+          <input type="number" id="pauseMs" class="ios-input" value="3000" min="500" step="100">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="ios-footer-text">
+      Adjust cooldown to avoid rate limits.
+    </div>
+
+  </main>
+
+  <!-- Bottom Action Sheet / Footer -->
+  <footer class="ios-footer">
+    <div class="status-pill" id="elapsed">00:00</div>
+    <button id="mainBtn" class="ios-btn-primary">
+      Start Cleaning
+    </button>
+  </footer>
+
+  <!-- Guide Modal (iOS Sheet Style) -->
+  <div id="guideModal" class="modal-overlay hidden">
+    <div class="modal-sheet">
+      <div class="sheet-header">
+        <div class="sheet-grabber"></div>
+        <div class="sheet-title">Quick Guide</div>
+        <button class="sheet-close" id="closeGuide">Done</button>
+      </div>
+      <div class="sheet-body">
+        <div class="guide-step">
+          <div class="step-num">1</div>
+          <div class="step-text">Go to your <strong>X Profile</strong> page.</div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">2</div>
+          <div class="step-text">Choose <strong>Delete</strong> or <strong>Unlike</strong> mode.</div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">3</div>
+          <div class="step-text">Set your <strong>Batch Size</strong> and <strong>Cooldown</strong>.</div>
+        </div>
+        <div class="guide-step">
+          <div class="step-num">4</div>
+          <div class="step-text">Tap <strong>Start Cleaning</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+
+</html>
