@@ -18,7 +18,7 @@
     <div class="nav-title">X Cleaner</div>
     <div class="nav-right">
       <button class="icon-btn" id="guideBtn" aria-label="Help">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -36,8 +36,17 @@
     </div>
   </div>
 
-  <!-- Main Content Scroll -->
+  <!-- Main Content -->
   <main class="ios-content">
+
+    <!-- Activity Bar: status + timer in one row -->
+    <div class="activity-bar" id="activityBar">
+      <div class="activity-left">
+        <div class="activity-dot" id="activityDot"></div>
+        <div class="activity-status" id="statusText">Ready</div>
+      </div>
+      <div class="activity-timer" id="elapsed">00:00</div>
+    </div>
 
     <!-- Stats Group -->
     <div class="ios-group">
@@ -47,7 +56,7 @@
       </div>
       <div class="ios-divider"></div>
       <div class="ios-row">
-        <div class="ios-label">Batch Progress</div>
+        <div class="ios-label">Batch</div>
         <div class="ios-value" id="batch">0/5</div>
       </div>
     </div>
@@ -96,38 +105,55 @@
 
   </main>
 
-  <!-- Bottom Action Sheet / Footer -->
+  <!-- Bottom Action -->
   <footer class="ios-footer">
-    <div class="status-pill" id="elapsed">00:00</div>
     <button id="mainBtn" class="ios-btn-primary">
       Start Cleaning
     </button>
   </footer>
 
-  <!-- Guide Modal (iOS Sheet Style) -->
+  <!-- Guide Modal (Full Sheet) -->
   <div id="guideModal" class="modal-overlay hidden">
-    <div class="modal-sheet">
+    <div class="modal-sheet modal-sheet--full">
       <div class="sheet-header">
         <div class="sheet-grabber"></div>
         <div class="sheet-title">Quick Guide</div>
         <button class="sheet-close" id="closeGuide">Done</button>
       </div>
       <div class="sheet-body">
-        <div class="guide-step">
-          <div class="step-num">1</div>
-          <div class="step-text">Go to your <strong>X Profile</strong> page.</div>
+        <div class="guide-section">
+          <div class="guide-section-title">To delete your posts</div>
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Open your <strong>X Profile</strong> → tap the <strong>Posts</strong> tab.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Select <strong>Delete</strong> mode in the toggle above.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">3</div>
+            <div class="step-text">Turn on <strong>Undo Reposts</strong> if you also want to remove reposts.</div>
+          </div>
         </div>
-        <div class="guide-step">
-          <div class="step-num">2</div>
-          <div class="step-text">Choose <strong>Delete</strong> or <strong>Unlike</strong> mode.</div>
+        <div class="guide-divider"></div>
+        <div class="guide-section">
+          <div class="guide-section-title">To remove your likes</div>
+          <div class="guide-step">
+            <div class="step-num">1</div>
+            <div class="step-text">Open your <strong>X Profile</strong> → tap the <strong>Likes</strong> tab.</div>
+          </div>
+          <div class="guide-step">
+            <div class="step-num">2</div>
+            <div class="step-text">Select <strong>Unlike</strong> mode in the toggle above.</div>
+          </div>
         </div>
-        <div class="guide-step">
-          <div class="step-num">3</div>
-          <div class="step-text">Set your <strong>Batch Size</strong> and <strong>Cooldown</strong>.</div>
-        </div>
-        <div class="guide-step">
-          <div class="step-num">4</div>
-          <div class="step-text">Tap <strong>Start Cleaning</strong>.</div>
+        <div class="guide-divider"></div>
+        <div class="guide-section">
+          <div class="guide-step">
+            <div class="step-num">⚙</div>
+            <div class="step-text">Set <strong>Batch Size</strong> and <strong>Cooldown</strong> to control speed and avoid X's rate limit. Then tap <strong>Start Cleaning</strong>.</div>
+          </div>
         </div>
       </div>
     </div>

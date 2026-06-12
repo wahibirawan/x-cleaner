@@ -1,10 +1,11 @@
-// popup.js — X Cleaner (iOS Style)
+// popup.js — X Cleaner (iOS Style — Compact)
 
 let mode = 'delete';
 let running = false;
 let currentTabId = null;
 let startTime = null;
 let timerId = null;
+const X_URL_PATTERN = /^https:\/\/(x\.com|twitter\.com)/;
 
 // DOM Elements
 const $ = (s) => document.querySelector(s);
@@ -21,6 +22,8 @@ const segments = document.querySelectorAll('.segment');
 const guideBtn = $('#guideBtn');
 const guideModal = $('#guideModal');
 const closeGuide = $('#closeGuide');
+const activityBar = $('#activityBar');
+const statusText = $('#statusText');
 
 // Guide Modal
 guideBtn.addEventListener('click', () => guideModal.classList.remove('hidden'));
@@ -46,7 +49,10 @@ function startTimer(from = null) {
 function stopTimer(reset = true) {
   clearInterval(timerId);
   timerId = null;
-  if (reset) elapsedEl.textContent = '00:00';
+  if (reset) {
+    elapsedEl.textContent = '00:00';
+    startTime = null;
+  }
 }
 
 async function getActiveTabId() {
@@ -57,10 +63,22 @@ async function getActiveTabId() {
 function sendMsg(tabId, msg) {
   return new Promise((resolve) => {
     chrome.tabs.sendMessage(tabId, msg, (resp) => {
-      if (chrome.runtime.lastError) resolve(null);
-      else resolve(resp);
+      if (chrome.runtime.lastError) {
+        console.warn('sendMsg error:', chrome.runtime.lastError.message);
+        resolve(null);
+      } else {
+        resolve(resp);
+      }
     });
   });
+}
+
+// --- Activity Bar ---
+function setActivityState(state, text) {
+  // state: 'idle' | 'running' | 'paused' | 'error'
+  activityBar.classList.remove('running', 'paused', 'error');
+  if (state !== 'idle') activityBar.classList.add(state);
+  statusText.textContent = text;
 }
 
 // --- UI Logic ---
@@ -82,13 +100,20 @@ function updateModeUI(newMode) {
 
 function setRunningState(isRunning) {
   running = isRunning;
+  // Disable/enable settings while running
+  batchSizeEl.disabled = isRunning;
+  pauseMsEl.disabled = isRunning;
+  toggleUndo.disabled = isRunning;
   if (running) {
+    mainBtn.classList.remove('paused');
     mainBtn.classList.add('running');
     mainBtn.textContent = 'Stop Cleaning';
+    setActivityState('running', 'Starting…');
   } else {
-    mainBtn.classList.remove('running');
+    mainBtn.classList.remove('running', 'paused');
     mainBtn.textContent = 'Start Cleaning';
     stopTimer();
+    setActivityState('idle', 'Ready');
   }
 }
 
@@ -106,7 +131,7 @@ mainBtn.addEventListener('click', () => {
 });
 
 // --- Init ---
-document.addEventListener('DOMContentLoaded', hydrateUI);
+hydrateUI();
 
 async function hydrateUI() {
   currentTabId = await getActiveTabId();
@@ -122,7 +147,8 @@ async function hydrateUI() {
 
       if (typeof status.total === 'number') totalEl.textContent = status.total;
       const size = cur.batchSize ?? Number(batchSizeEl.value || 5);
-      batchEl.textContent = `0/${size}`;
+      const currentInBatch = typeof status.inBatch === 'number' ? status.inBatch : 0;
+      batchEl.textContent = `${currentInBatch}/${size}`;
 
       if (status.startedAt) startTimer(status.startedAt);
       else startTimer(Date.now());
@@ -134,12 +160,23 @@ async function hydrateUI() {
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.type === 'xam-progress') {
-    const { total, inBatch, batchSize } = msg.payload || {};
+    const { total, inBatch, batchSize, status } = msg.payload || {};
     if (typeof total === 'number') totalEl.textContent = total;
     if (typeof inBatch === 'number') {
       const size = typeof batchSize === 'number' ? batchSize : Number(batchSizeEl.value || 5);
       batchEl.textContent = `${inBatch}/${size}`;
     }
+    // Update activity bar with live status
+    if (status && running) {
+      setActivityState('running', status);
+    }
+  }
+  if (msg?.type === 'xam-paused') {
+    const reason = msg.payload?.reason || 'Dijeda';
+    mainBtn.textContent = 'Dijeda — cek tab X';
+    mainBtn.classList.remove('running');
+    mainBtn.classList.add('paused');
+    setActivityState('paused', reason);
   }
   if (msg?.type === 'xam-stopped') {
     setRunningState(false);
@@ -147,19 +184,49 @@ chrome.runtime.onMessage.addListener((msg) => {
   }
 });
 
+function clampInput(el, min, max, fallback) {
+  let v = Number(el.value);
+  if (isNaN(v) || v < min) v = min;
+  if (v > max) v = max;
+  el.value = v;
+  return v;
+}
+
 async function startRun() {
   currentTabId = await getActiveTabId();
   if (!currentTabId) return;
 
-  await chrome.scripting.executeScript({ target: { tabId: currentTabId }, files: ['content.js'] });
+  // Validate that we're on X/Twitter
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.url || !X_URL_PATTERN.test(tab.url)) {
+    mainBtn.textContent = 'Open x.com first';
+    setTimeout(() => { mainBtn.textContent = 'Start Cleaning'; }, 2000);
+    return;
+  }
+
+  // Validate inputs
+  const batchSize = clampInput(batchSizeEl, 1, 50, 5);
+  const pauseMs = clampInput(pauseMsEl, 500, 60000, 3000);
+
+  try {
+    await chrome.scripting.executeScript({ target: { tabId: currentTabId }, files: ['content.js'] });
+  } catch (err) {
+    console.error('Failed to inject content script:', err);
+    mainBtn.textContent = 'Inject failed';
+    setTimeout(() => { mainBtn.textContent = 'Start Cleaning'; }, 2000);
+    return;
+  }
+
+  // Small delay to ensure content script listener is registered
+  await new Promise(r => setTimeout(r, 150));
 
   await sendMsg(currentTabId, {
     type: 'xam-start',
     payload: {
       mode,
       alsoUndoReposts: (mode === 'delete') ? !!toggleUndo.checked : false,
-      batchSize: Number(batchSizeEl.value || 5),
-      pauseMs: Number(pauseMsEl.value || 3000),
+      batchSize,
+      pauseMs,
     }
   });
 
